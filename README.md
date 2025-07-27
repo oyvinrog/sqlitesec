@@ -1,35 +1,70 @@
+# SqliteSec
 
-Protect the privacy of your sqlite databases (i.e. for analysis). 
-These files can more safely be sent to other people, without fear of interception. You can also more safely work 
-with sensitive data, as the data is encrypted with AES-256
+**Secure SQLite databases with AES-256 encryption**
 
-## Example usage:
+SqliteSec protects your SQLite databases by encrypting them with industry-standard AES-256 encryption. Share sensitive data safely or work with confidential information without compromising security.
 
+## Installation
+
+```bash
+pip install sqlitesec
 ```
+
+## Features
+
+- **AES-256 encryption** - Military-grade security for your databases
+- **Seamless integration** - Drop-in replacement for standard SQLite connections
+- **Automatic encryption/decryption** - Transparent operation with your existing code
+- **Secure file sharing** - Safely send encrypted databases to others
+
+## Quick Start
+
+```python
 from sqlitesec import SqliteSec
 import os
 
-# Usage example
-if os.path.exists("test.db"):
-    os.remove("test.db")
-
-key = b'blabla'
+# Initialize with your encryption key
+key = os.urandom(32)  # Generate a secure 256-bit key
 sqs = SqliteSec(key)
 
-conn = sqs.connect("test.db")
+# Create and use encrypted database
+conn = sqs.connect("secure.db")
 cursor = conn.cursor()
-cursor.execute('CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY, data TEXT)')
-cursor.execute('INSERT INTO test (data) VALUES (?)', ('Hei, verden!',))
+
+# Standard SQLite operations work normally
+cursor.execute('CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT)')
+cursor.execute('INSERT INTO users (name) VALUES (?)', ('Alice',))
 conn.commit()
-sqs.close(conn, "test.db")
 
-
-# Step 2: Read the data back
-
-conn = sqs.connect("test.db")
-cursor = conn.cursor()
-cursor.execute('SELECT data FROM test WHERE id=1')
-fetched_data = cursor.fetchone()[0]
-print(fetched_data)
-sqs.close(conn, "test.db")
+# Always close properly to ensure encryption
+sqs.close(conn, "secure.db")
 ```
+
+## Reading Encrypted Data
+
+```python
+# Reconnect and read data
+conn = sqs.connect("secure.db")
+cursor = conn.cursor()
+
+cursor.execute('SELECT name FROM users WHERE id = 1')
+user_name = cursor.fetchone()[0]
+print(f"User: {user_name}")
+
+sqs.close(conn, "secure.db")
+```
+
+## API Reference
+
+### `SqliteSec(key)`
+Initialize with encryption key (32 bytes for AES-256).
+
+### `connect(database_path)`
+Open encrypted database connection. Returns standard SQLite connection object.
+
+### `close(connection, database_path)`
+Properly close connection and ensure data is encrypted.
+
+---
+
+**Security Note**: Always use a strong, randomly generated key and store it securely.
